@@ -6,6 +6,7 @@ from rest_framework import status,generics
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from django.db.models import Max
+from rest_framework.permissions import IsAuthenticated
 
 # class Product_list(APIView):
 #     def get(self, request):
@@ -66,3 +67,12 @@ def prod_info_list(request):
         'max_price': products.aggregate(max_price = Max('price'))['max_price']
     })
     return Response(serializer.data)
+
+class UserOrderListAPIView(generics.ListAPIView):
+    queryset = Order.objects.prefetch_related('items__product')
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs =  super().get_queryset()
+        return qs.filter(user=self.request.user)

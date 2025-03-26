@@ -27,5 +27,5 @@ urlpatterns = [
     path('orders/',Order_list.as_view(),name='order-list'),
     path('order/<int:pk>/',Order_detail.as_view(),name='order-detail'),
     path('products/info/',views.prod_info_list,name='product-info-list'),
-
+    path('user-orders/',views.UserOrderListAPIView.as_view(),name='user-orders-list')
 ]
