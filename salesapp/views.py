@@ -6,7 +6,9 @@ from rest_framework import status,generics
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from django.db.models import Max
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated,IsAdminUser,AllowAny
+from .tasks import schedule_order
+from uuid import UUID 
 
 # class Product_list(APIView):
 #     def get(self, request):
@@ -24,6 +26,12 @@ from rest_framework.permissions import IsAuthenticated
 class Product_list(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+
+    def get_permissions(self):
+        self.permission_classes = [AllowAny]
+        if self.request.method == 'POST':
+            self.permission_classes = [IsAdminUser]
+        return super().get_permissions()
     
 class Product_detail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
@@ -39,34 +47,42 @@ class Order_list(APIView):
     def post(self,request):
         serializer = OrderSerializer(data = request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data,status=status.HTTP_201_CREATED)
+            order = serializer.save()
+            schedule_order.delay(str(order.order_id))
+            return Response( {"message": "Order received, processing in the background.", "order_id": order.order_id},
+                status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
 class Order_detail(APIView):
 
-    def get(self,request,pk):
-        ord = get_object_or_404(Order,pk=pk)
-        serializer = OrderSerializer(ord)
-        return Response(serializer.data)
+    def get(self,request,order_id):
+        try:
+            
+            ord = get_object_or_404(Order,order_id=str(order_id))
+            # ord = get_object_or_404(Order,order_id=order_uuid)
+            serializer = OrderSerializer(ord)
+            return Response(serializer.data)
+        except Order.DoesNotExist:
+            return Response({"error":"Order not found"},status=status.HTTP_404_NOT_FOUND)
     
-    def put(self,request,pk):
-        ord = get_object_or_404(Order,pk=pk)
+    def put(self,request,order_id):
+        ord = get_object_or_404(Order,order_id=str(order_id))
         serializer = OrderSerializer(ord,data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
+            order = serializer.save()
+            schedule_order.delay(str(order.order_id))
+            return Response({"message": "Order received for Updation, processing in the background.", "order_id": order.order_id},serializer.data)
         return Response(serializer.errors,status=status.HTTP_404_NOT_FOUND)
     
-@api_view(['GET'])
-def prod_info_list(request):
-    products = Product.objects.all()
-    serializer = ProductInfoSerializer({
-        'products': products,
-        'count': len(products),
-        'max_price': products.aggregate(max_price = Max('price'))['max_price']
-    })
-    return Response(serializer.data)
+class Prod_Info_List(APIView):
+    def get(self,request):
+        products = Product.objects.all()
+        serializer = ProductInfoSerializer({
+            'products': products,
+            'count': len(products),
+            'max_price': products.aggregate(max_price = Max('price'))['max_price']
+        })
+        return Response(serializer.data)
 
 class UserOrderListAPIView(generics.ListAPIView):
     queryset = Order.objects.prefetch_related('items__product')

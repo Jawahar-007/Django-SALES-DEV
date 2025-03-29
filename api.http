@@ -1,0 +1,13 @@
+GET http://localhost:8000/products/ HTTP/1.1
+
+###
+
+POST  http://localhost:8000/products/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "prod_name": "Television",
+    "price": 9800,
+    "stock": 26,
+    "description": "New Amoled Featured 50-inch TV" 
+}

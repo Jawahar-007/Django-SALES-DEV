@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include,path
-from salesapp.views import Product_list,Product_detail,Order_list,Order_detail
+from salesapp.views import Product_list,Product_detail,Order_list,Order_detail,Prod_Info_List
 from salesapp import views
 
 urlpatterns = [
@@ -25,7 +25,7 @@ urlpatterns = [
     path('products/',Product_list.as_view(),name='product-list'),
     path('products/<int:pk>/',Product_detail.as_view(),name='product-detail'),
     path('orders/',Order_list.as_view(),name='order-list'),
-    path('order/<int:pk>/',Order_detail.as_view(),name='order-detail'),
-    path('products/info/',views.prod_info_list,name='product-info-list'),
+    path('order/<uuid:order_id>/',Order_detail.as_view(),name='order-detail'),
+    path('products/info/',Prod_Info_List.as_view(),name='product-info-list'),
     path('user-orders/',views.UserOrderListAPIView.as_view(),name='user-orders-list')
 ]
