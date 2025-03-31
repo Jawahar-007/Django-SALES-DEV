@@ -4,10 +4,24 @@ GET http://localhost:8000/products/ HTTP/1.1
 
 POST  http://localhost:8000/products/ HTTP/1.1
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQzNDE0NjU0LCJqdGkiOiIxMDBhNzI4MmM5NTQ0YjgyYWM0YmNmZWZlNTc2MmZhZCIsInVzZXJfaWQiOjN9.4Mw6wB5gr-KisDEuM_ptmveU7nXxhnJqQm8aQtn-xKQ
 
 {
-    "prod_name": "Television",
-    "price": 9800,
-    "stock": 26,
-    "description": "New Amoled Featured 50-inch TV" 
+    "prod_name": "PS - 5",
+    "price": 54500,
+    "stock": 24,
+    "description": "Optimised AI Features and ANC Dopes offered" 
 }
+
+###
+POST http://localhost:8000/api/token/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "username":"postgre",
+    "password":"test"
+}
+###
+
+GET http://localhost:8000/user-orders/ HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQzNDE0NjU0LCJqdGkiOiIxMDBhNzI4MmM5NTQ0YjgyYWM0YmNmZWZlNTc2MmZhZCIsInVzZXJfaWQiOjN9.4Mw6wB5gr-KisDEuM_ptmveU7nXxhnJqQm8aQtn-xKQ
