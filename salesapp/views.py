@@ -35,8 +35,14 @@ class Product_list(generics.ListCreateAPIView):
     
 class Product_detail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer(queryset)
-    lookup_field = 'id'
+    serializer_class = ProductSerializer
+    lookup_url_kwarg = 'id'
+
+    def get_permissions(self):
+        self.permission_classes = [AllowAny]
+        if self.request.method in ['PUT','PATCH','DELETE']:
+            self.permission_classes = [IsAdminUser]
+        return super().get_permissions()
 
 class Order_list(APIView):
     def get(self,request):

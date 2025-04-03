@@ -4,7 +4,7 @@ from .models import Product,Order,OrderItem
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ('id','prod_name','description','price','stock',)
+        fields = ('id','prod_name','description','price','stock')
 
     def validate_price(self, value):
         if value <=0:
@@ -12,9 +12,11 @@ class ProductSerializer(serializers.ModelSerializer):
         return value
     
 class OrderItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name')
+    product_price = serializers.DecimalField(max_digits=10,decimal_places=2,source='product.price')
     class Meta:
         model = OrderItem
-        fields = '__all__'
+        fields = ('product_name','product_price','quantity','item_subtotal')
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True,read_only = True)
