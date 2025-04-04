@@ -16,20 +16,21 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include,path
-from salesapp.views import Product_list,Product_detail,Order_list,Order_detail,Prod_Info_List
+from salesapp.views import Product_list,Product_detail,Prod_Info_List,OrderViewSet
 from salesapp import views
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView,SpectacularRedocView,SpectacularSwaggerView
+from rest_framework.routers import DefaultRouter
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('products/',Product_list.as_view(),name='product-list'),
     path('products/<int:id>/',Product_detail.as_view(),name='product-detail'),
-    path('orders/',Order_list.as_view(),name='order-list'),
-    path('order/<uuid:order_id>/',Order_detail.as_view(),name='order-detail'),
+    # path('orders/',Order_list.as_view(),name='order-list'),
+    # path('order/<uuid:order_id>/',Order_detail.as_view(),name='order-detail'),
     path('products/info/',Prod_Info_List.as_view(),name='product-info-list'),
-    path('user-orders/',views.UserOrderListAPIView.as_view(),name='user-orders-list'),
+    # path('user-orders/',views.UserOrderListAPIView.as_view(),name='user-orders-list'),
 
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
@@ -39,3 +40,7 @@ urlpatterns = [
     path('api/schema/swagger-ui/',SpectacularSwaggerView.as_view(url_name='schema'),name='swagger-ui'),
     path('api/schema/redoc/',SpectacularRedocView.as_view(url_name='schema'),name='redoc'),
 ]
+
+router = DefaultRouter()
+router.register('orders',views.OrderViewSet)
+urlpatterns+= router.urls
