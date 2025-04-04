@@ -9,7 +9,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Get or create the superuser
-        user, _ = User.objects.get_or_create(username='postgres', defaults={'password': 'test'})
+        user, _ = User.objects.get_or_create(username='postgre', defaults={'password': 'test'})
         
         # Ensure a customer exists
         customer, _ = Customer.objects.get_or_create(
