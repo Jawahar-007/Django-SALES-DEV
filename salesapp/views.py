@@ -1,5 +1,8 @@
 from .models import Product,Order,OrderItem,Customer
 from .serializers import ProductSerializer,OrderItemSerializer,OrderSerializer,ProductInfoSerializer
+from .filters import ProductFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status,generics
@@ -9,6 +12,8 @@ from django.db.models import Max
 from rest_framework.permissions import IsAuthenticated,IsAdminUser,AllowAny
 from .tasks import schedule_order
 from uuid import UUID 
+from .paginations import CustomPagination
+
 
 # class Product_list(APIView):
 #     def get(self, request):
@@ -24,11 +29,22 @@ from uuid import UUID
 #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class Product_list(generics.ListCreateAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().order_by('created_at')[:250]
     serializer_class = ProductSerializer
+    filterset_class = ProductFilter
+    filter_backends = [ 
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+        
+    ]
 
+    search_fields = ['prod_name','description']
+    ordering_fields = ['prod_name','price','stock']
+    pagination_class = CustomPagination
+    
     def get_permissions(self):
-        self.permission_classes = [AllowAny]
+        self.permission_classes = [AllowAny]    
         if self.request.method == 'POST':
             self.permission_classes = [IsAdminUser]
         return super().get_permissions()
