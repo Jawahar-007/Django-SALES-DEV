@@ -36,7 +36,18 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         return order
     
     def update(self, instance, validated_data):
-        return super().update(instance, validated_data)
+        orderitem_data = validated_data.pop('items')
+        instance = super().update(instance,validated_data)  # update the order itself not the child items passed
+
+        if orderitem_data is not None:
+            #Clear existing items (optional,depends on requirements)
+            instance.items.all().delete()
+
+            #Recreate items with updated data
+            for item in orderitem_data:
+                OrderItem.objects.create(order=instance,**item)
+        return instance
+
     class Meta:
         model = Order
         fields = ('order_id','user','status','items')
@@ -56,7 +67,6 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ('order_id','created_at','user','status','items','total_price')
-
 
 
 class ProductInfoSerializer(serializers.Serializer):
