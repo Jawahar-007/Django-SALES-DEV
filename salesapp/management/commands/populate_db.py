@@ -47,7 +47,7 @@ class Command(BaseCommand):
                     order=order,
                     product=product,
                     quantity=random.randint(1, 3),
-                    price=product.price
+                    # price=product.price
                 )
 
         self.stdout.write(self.style.SUCCESS("Successfully populated database!"))

@@ -25,7 +25,6 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiY
 }
 ###
 DELETE http://localhost:8000/products/12/ HTTP/1.1
-Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQzNDI2NTA5LCJqdGkiOiI5ZTcyMDEwZTcxYzU0YWM1ODlhYjVkOWIyOTc2ZWI5NSIsInVzZXJfaWQiOjN9.etxaCzpfceY1-VkeFEn2PxpYxSke6AGezkvx5eh__30
 
 ###
@@ -42,8 +41,31 @@ POST http://localhost:8000/api/token/refresh/ HTTP/1.1
 Content-Type: application/json
 
 {
-    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc0MzUwMTgxNywianRpIjoiNWUwZjQ3NGEzNzJhNGQ2NzhmYjkzNTI1YmI5NmY4NzAiLCJ1c2VyX2lkIjozfQ.-aeL_vWs2Dek79VNS4Ac3C8iSVF-ddGx0ZxrbUDzJjY"
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc0Mzk0MTM0MiwianRpIjoiY2ZiNWQ1MjhjYTM4NDZjNmE1MmM1NDQxYWI0NmRjOWEiLCJ1c2VyX2lkIjozfQ.r90o8u7PdIH6ldw7EY9-fAEVvUSkVKyQtmi3BIqBoOo"
 }
 ###
-GET http://localhost:8000/user-orders/ HTTP/1.1
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQzNDE0NjU0LCJqdGkiOiIxMDBhNzI4MmM5NTQ0YjgyYWM0YmNmZWZlNTc2MmZhZCIsInVzZXJfaWQiOjN9.4Mw6wB5gr-KisDEuM_ptmveU7nXxhnJqQm8aQtn-xKQ
+GET http://localhost:8000/orders/ HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ0MDA2MDk2LCJqdGkiOiIzMGM3ODgzNDYyMzk0NTI2OTgxZDVjMDYzNGJhNjY1NyIsInVzZXJfaWQiOjN9.2UINiWeCfaQgYa7n8T-I1zvTDZPeDa143Kka3wBCKZk
+###
+POST http://localhost:8000/orders/ HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ0MDA2MDk2LCJqdGkiOiIzMGM3ODgzNDYyMzk0NTI2OTgxZDVjMDYzNGJhNjY1NyIsInVzZXJfaWQiOjN9.2UINiWeCfaQgYa7n8T-I1zvTDZPeDa143Kka3wBCKZk
+Content-Type: application/json
+
+{
+    "status": "Pending",
+    "items": [
+        {
+            "product":3,
+            "quantity":7
+        },
+        {
+            "product": 1,
+            "quantity": 2
+        }
+    ]
+}
+###
+PUT http://localhost:8000/orders/3d5495de-92d1-4fb8-bef4-ea98746cd953
+Authorization: Bearer 
+Content-Type: application/json
+

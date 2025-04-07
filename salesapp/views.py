@@ -1,5 +1,5 @@
 from .models import Product,Order,OrderItem,Customer
-from .serializers import ProductSerializer,OrderItemSerializer,OrderSerializer,ProductInfoSerializer
+from .serializers import ProductSerializer,OrderItemSerializer,OrderSerializer,ProductInfoSerializer,OrderCreateSerializer
 from .filters import ProductFilter,OrderFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
@@ -71,11 +71,26 @@ class OrderViewSet(viewsets.ModelViewSet):
         DjangoFilterBackend,
         filters.SearchFilter,
         filters.OrderingFilter]
-    @action(detail=False,methods=['get'], url_path='user-orders')
-    def user_orders(self,request):
-        orders = self.get_queryset().filter(user=request.user) # fetch the queryset data of Orders
-        serializer = self.get_serializer(orders,many=True)     # filters for logged in users
-        return Response(serializer.data)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user) # Saves
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return OrderCreateSerializer
+        return super().get_serializer_class()
+    
+    def get_queryset(self):
+        qs =  super().get_queryset()  # fetch the data of orders and get the nested data of items 
+        if not self.request.user.is_staff:  # User isn't staff then user gets his data filled and mapped within user
+            qs = qs.filter(user=self.request.user) 
+        return qs
+    
+    # @action(detail=False,methods=['get'], url_path='user-orders')
+    # def user_orders(self,request):
+    #     orders = self.get_queryset().filter(user=request.user) # fetch the queryset data of Orders
+    #     serializer = self.get_serializer(orders,many=True)     # filters for logged in users
+    #     return Response(serializer.data)
 # class Order_list(APIView):
 #     def get(self,request):
 #         ord = Order.objects.all()
