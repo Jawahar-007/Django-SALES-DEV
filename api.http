@@ -32,7 +32,7 @@ POST http://localhost:8000/api/token/ HTTP/1.1
 Content-Type: application/json
 
 {
-    "username":"postgre",
+    "username":"admin",
     "password":"test"
 }
 
@@ -65,7 +65,20 @@ Content-Type: application/json
     ]
 }
 ###
-PUT http://localhost:8000/orders/3d5495de-92d1-4fb8-bef4-ea98746cd953
-Authorization: Bearer 
+PUT http://localhost:8000/orders/3d5495de-92d1-4fb8-bef4-ea98746cd953/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ0MDE2Njk2LCJqdGkiOiI0ZDc2NWM0NTY2NTQ0ODMxOTc3ZWZiNmEzOTQ1Zjk4ZSIsInVzZXJfaWQiOjZ9.bpk7bxWAzvleHJp1NJYU3svbswd7GAJMtyVusEqLpY4
 Content-Type: application/json
 
+{
+    "status": "Pending",
+    "items": [
+        {
+            "product":2,
+            "quantity":4
+        },
+        {
+            "product": 4,
+            "quantity": 2
+        }
+    ]
+}
