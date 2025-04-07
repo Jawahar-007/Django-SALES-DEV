@@ -18,6 +18,32 @@ class OrderItemSerializer(serializers.ModelSerializer):
         model = OrderItem
         fields = ('product_name','product_price','quantity','item_subtotal')
 
+class OrderCreateSerializer(serializers.ModelSerializer):
+    class OrderItemCreateSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = OrderItem
+            fields = ('product','quantity')
+
+    order_id = serializers.UUIDField(read_only=True)
+    items = OrderItemCreateSerializer(many=True)
+    def create(self,validated_data):
+        orderitem_data = validated_data.pop('items')
+        order = Order.objects.create(**validated_data)
+
+        for item in orderitem_data:
+            OrderItem.objects.create(order=order,**item) # associate each orderItem with order created above
+                                                         # and take orderitem data and split into keyword args
+        return order
+    
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
+    class Meta:
+        model = Order
+        fields = ('order_id','user','status','items')
+        extra_kwargs = {
+            'user': {'read_only':True}  # set user fields as read_only
+        }
+
 class OrderSerializer(serializers.ModelSerializer):
     order_id = serializers.UUIDField(read_only = True)
     items = OrderItemSerializer(many=True,read_only = True)
@@ -29,7 +55,9 @@ class OrderSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Order
-        fields = ['order_id','created_at','user','status','items','total_price']
+        fields = ('order_id','created_at','user','status','items','total_price')
+
+
 
 class ProductInfoSerializer(serializers.Serializer):
     products = ProductSerializer(many = True)
