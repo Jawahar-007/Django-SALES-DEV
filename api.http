@@ -65,8 +65,8 @@ Content-Type: application/json
     ]
 }
 ###
-PUT http://localhost:8000/orders/3d5495de-92d1-4fb8-bef4-ea98746cd953/
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ0MDE2Njk2LCJqdGkiOiI0ZDc2NWM0NTY2NTQ0ODMxOTc3ZWZiNmEzOTQ1Zjk4ZSIsInVzZXJfaWQiOjZ9.bpk7bxWAzvleHJp1NJYU3svbswd7GAJMtyVusEqLpY4
+PATCH http://localhost:8000/orders/3d5495de-92d1-4fb8-bef4-ea98746cd953
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ0MDE2NTkwLCJqdGkiOiJkMzk4ZDEzMGRjMDQ0M2U0OWYwODNiZDM1Y2EwNWI0MyIsInVzZXJfaWQiOjN9.F3Qzof_zrJpuzr1WwVONtlHSttLMLehdYhpQYUD27-o
 Content-Type: application/json
 
 {
