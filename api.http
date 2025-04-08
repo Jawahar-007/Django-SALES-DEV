@@ -65,7 +65,7 @@ Content-Type: application/json
     ]
 }
 ###
-PUT http://localhost:8000/orders/3d5495de-92d1-4fb8-bef4-ea98746cd953
+PATCH http://localhost:8000/orders/3d5495de-92d1-4fb8-bef4-ea98746cd953
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ0MDE2NTkwLCJqdGkiOiJkMzk4ZDEzMGRjMDQ0M2U0OWYwODNiZDM1Y2EwNWI0MyIsInVzZXJfaWQiOjN9.F3Qzof_zrJpuzr1WwVONtlHSttLMLehdYhpQYUD27-o
 Content-Type: application/json
 

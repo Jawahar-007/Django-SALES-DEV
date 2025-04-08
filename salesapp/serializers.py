@@ -1,4 +1,5 @@
 from rest_framework import serializers 
+from django.db import transaction
 from .models import Product,Order,OrderItem
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -22,37 +23,46 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     class OrderItemCreateSerializer(serializers.ModelSerializer):
         class Meta:
             model = OrderItem
-            fields = ('product','quantity')
+            fields = ('product', 'quantity')
 
     order_id = serializers.UUIDField(read_only=True)
-    items = OrderItemCreateSerializer(many=True)
-    def create(self,validated_data):
-        orderitem_data = validated_data.pop('items')
-        order = Order.objects.create(**validated_data)
+    items = OrderItemCreateSerializer(many=True, required=False)
 
-        for item in orderitem_data:
-            OrderItem.objects.create(order=order,**item) # associate each orderItem with order created above
-                                                         # and take orderitem data and split into keyword args
-        return order
-    
     def update(self, instance, validated_data):
         orderitem_data = validated_data.pop('items')
-        instance = super().update(instance,validated_data)  # update the order itself not the child items passed
 
-        if orderitem_data is not None:
-            #Clear existing items (optional,depends on requirements)
-            instance.items.all().delete()
+        with transaction.atomic():
+            instance = super().update(instance, validated_data)
 
-            #Recreate items with updated data
-            for item in orderitem_data:
-                OrderItem.objects.create(order=instance,**item)
+            if orderitem_data is not None:
+                # Clear existing items (optional, depends on requirements)
+                instance.items.all().delete()
+
+                # Recreate items with the updated data
+                for item in orderitem_data:
+                    OrderItem.objects.create(order=instance, **item)
         return instance
+
+    def create(self, validated_data):
+        orderitem_data = validated_data.pop('items')
+
+        with transaction.atomic():
+            order = Order.objects.create(**validated_data)
+
+            for item in orderitem_data:
+                OrderItem.objects.create(order=order, **item)
+        return order
 
     class Meta:
         model = Order
-        fields = ('order_id','user','status','items')
+        fields = (
+            'order_id',
+            'user',
+            'status',
+            'items',
+        )
         extra_kwargs = {
-            'user': {'read_only':True}  # set user fields as read_only
+            'user': {'read_only': True}
         }
 
 class OrderSerializer(serializers.ModelSerializer):
