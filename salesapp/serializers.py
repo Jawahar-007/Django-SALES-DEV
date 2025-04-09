@@ -1,6 +1,6 @@
 from rest_framework import serializers 
 from django.db import transaction
-from .models import Product,Order,OrderItem
+from .models import Product,Order,OrderItem,User
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,7 +11,13 @@ class ProductSerializer(serializers.ModelSerializer):
         if value <=0:
             raise serializers.ValidationError("Price entered be greater than zero")
         return value
-    
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User 
+        fields = ('password','user_permissions','is_authenticated','get_full_name','orders')
+        # exclude = ('password','user_permissions')
+
 class OrderItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.prod_name')
     product_price = serializers.DecimalField(max_digits=10,decimal_places=2,source='product.price')
@@ -51,6 +57,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
             for item in orderitem_data:
                 OrderItem.objects.create(order=order, **item)
+
         return order
 
     class Meta:

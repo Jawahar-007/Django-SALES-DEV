@@ -9,6 +9,8 @@ from rest_framework import status,generics,viewsets
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from django.db.models import Max
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework.permissions import IsAuthenticated,IsAdminUser,AllowAny
 from .tasks import schedule_order
 from uuid import UUID 
@@ -36,13 +38,21 @@ class Product_list(generics.ListCreateAPIView):
     filter_backends = [ 
         DjangoFilterBackend,
         filters.SearchFilter,
-        filters.OrderingFilter,
-        
+        filters.OrderingFilter, 
     ]
 
     search_fields = ['prod_name','description']
     ordering_fields = ['prod_name','price','stock']
-    pagination_class = CustomPagination
+    pagination_class = None
+    
+    @method_decorator(cache_page(60 * 15,key_prefix='product_list'))
+    def list(self,request,*args,**kwargs):# don't goto db , takes from cache
+        return super().list(request,*args,**kwargs)
+    
+    def get_queryset(self):  # get db objects for list view from db
+        import time
+        time.sleep(2)
+        return super().get_queryset()
     
     def get_permissions(self):
         self.permission_classes = [AllowAny]    
