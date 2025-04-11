@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -149,7 +150,15 @@ REST_FRAMEWORK = {
    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
    'PAGE_SIZE':4,
    'SEARCH_PARAM': 'find',
-   'ORDERING_PARAM': 'order-by'
+   'ORDERING_PARAM': 'order-by',
+   'DEFAULT_THROTTLE_CLASSES': [
+       'rest_framework.throttling.AnonRateThrottle',
+   ],
+   'DEFAULT_THROTTLE_RATES':{
+       'anon': '2/minute',
+       'products': '2/minute',
+       'orders': '3/minute',
+   }
 }
 
 SPECTACULAR_SETTINGS = {
@@ -167,4 +176,9 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     }
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }

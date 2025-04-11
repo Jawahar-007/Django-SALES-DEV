@@ -11,12 +11,13 @@ from rest_framework.decorators import api_view
 from django.db.models import Max
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie,vary_on_headers
 from rest_framework.permissions import IsAuthenticated,IsAdminUser,AllowAny
 from .tasks import schedule_order
 from uuid import UUID 
 from .paginations import CustomPagination
 from rest_framework.decorators import action
-
+from rest_framework.throttling import ScopedRateThrottle
 
 # class Product_list(APIView):
 #     def get(self, request):
@@ -44,6 +45,8 @@ class Product_list(generics.ListCreateAPIView):
     search_fields = ['prod_name','description']
     ordering_fields = ['prod_name','price','stock']
     pagination_class = None
+    throttle_scope = 'products'
+    throttle_classes = [ScopedRateThrottle]
     
     @method_decorator(cache_page(60 * 15,key_prefix='product_list'))
     def list(self,request,*args,**kwargs):# don't goto db , takes from cache
@@ -72,6 +75,7 @@ class Product_detail(generics.RetrieveUpdateDestroyAPIView):
         return super().get_permissions()
 
 class OrderViewSet(viewsets.ModelViewSet):
+    throttle_scope = 'orders'
     queryset = Order.objects.prefetch_related('items__product')
     serializer_class = OrderSerializer
     permission_classes = [AllowAny]
@@ -81,6 +85,11 @@ class OrderViewSet(viewsets.ModelViewSet):
         DjangoFilterBackend,
         filters.SearchFilter,
         filters.OrderingFilter]
+    
+    @method_decorator(cache_page(60 * 15,key_prefix='order_list'))
+    @method_decorator(vary_on_headers("Authorisation")) # value changes in header from user req then create a cached response and return response only with matching header 
+    def list(self,request,*args,**kwargs):# don't goto db , takes from cache
+        return super().list(request,*args,**kwargs)
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user) # Saves
