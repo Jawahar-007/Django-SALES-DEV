@@ -93,10 +93,13 @@ DATABASES = {
 }
 
 # Celery COnfigurations
-CELERY_BROKER_URL = 'pyamqp://guest@localhost'
-CELERY_RESULT_BACKEND = 'django-db'
+# CELERY_BROKER_URL = 'pyamqp://guest@localhost'
+# CELERY_RESULT_BACKEND = 'django-db'
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/1"
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

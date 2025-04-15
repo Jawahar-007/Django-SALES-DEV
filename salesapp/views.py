@@ -13,11 +13,11 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_cookie,vary_on_headers
 from rest_framework.permissions import IsAuthenticated,IsAdminUser,AllowAny
-from .tasks import schedule_order
+from .tasks import schedule_order,send_order_confirmation_email
 from uuid import UUID 
 from .paginations import CustomPagination
 from rest_framework.decorators import action
-from rest_framework.throttling import ScopedRateThrottle
+
 
 # class Product_list(APIView):
 #     def get(self, request):
@@ -33,7 +33,7 @@ from rest_framework.throttling import ScopedRateThrottle
 #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class Product_list(generics.ListCreateAPIView):
-    queryset = Product.objects.all().order_by('created_at')[:250]
+    # queryset = Product.objects.all().order_by('created_at')[:250]
     serializer_class = ProductSerializer
     filterset_class = ProductFilter
     filter_backends = [ 
@@ -46,7 +46,6 @@ class Product_list(generics.ListCreateAPIView):
     ordering_fields = ['prod_name','price','stock']
     pagination_class = None
     throttle_scope = 'products'
-    throttle_classes = [ScopedRateThrottle]
     
     @method_decorator(cache_page(60 * 15,key_prefix='product_list'))
     def list(self,request,*args,**kwargs):# don't goto db , takes from cache
@@ -55,7 +54,8 @@ class Product_list(generics.ListCreateAPIView):
     def get_queryset(self):  # get db objects for list view from db
         import time
         time.sleep(2)
-        return super().get_queryset()
+        qs = Product.objects.all().order_by('created_at')
+        return qs
     
     def get_permissions(self):
         self.permission_classes = [AllowAny]    
@@ -66,7 +66,7 @@ class Product_list(generics.ListCreateAPIView):
 class Product_detail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    lookup_url_kwarg = 'id'
+    lookup_url_kwarg = 'product_id'
 
     def get_permissions(self):
         self.permission_classes = [AllowAny]
@@ -92,7 +92,18 @@ class OrderViewSet(viewsets.ModelViewSet):
         return super().list(request,*args,**kwargs)
     
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user) # Saves
+        order = serializer.save(user=self.request.user) # Saves
+        send_order_confirmation_email(order.order_id,self.request.user.email)
+
+        # task = process_order_task.delay({
+        # "order_id": order.id,
+        # "user_id": order.user.id,
+        # "timestamp": str(order.created_at),
+        #  })
+        # return Response({
+        # "order_id": order.id,
+        # "task_id": task.id
+        # })
     
     def get_serializer_class(self):
         if self.action == 'create' or self.action == 'update':

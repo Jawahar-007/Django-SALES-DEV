@@ -26,7 +26,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('products/',Product_list.as_view(),name='product-list'),
-    path('products/<int:id>/',Product_detail.as_view(),name='product-detail'),
+    path('products/<int:product_id>/',Product_detail.as_view(),name='product-detail'),
     # path('orders/',Order_list.as_view(),name='order-list'),
     # path('order/<uuid:order_id>/',Order_detail.as_view(),name='order-detail'),
     path('products/info/',Prod_Info_List.as_view(),name='product-info-list'),
