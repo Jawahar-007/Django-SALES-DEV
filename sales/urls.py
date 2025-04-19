@@ -31,6 +31,7 @@ urlpatterns = [
     # path('order/<uuid:order_id>/',Order_detail.as_view(),name='order-detail'),
     path('products/info/',Prod_Info_List.as_view(),name='product-info-list'),
     # path('user-orders/',views.UserOrderListAPIView.as_view(),name='user-orders-list'),
+    # path('trigger-file/', views.TriggerFileCreationView.as_view(), name='trigger-file'),
 
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

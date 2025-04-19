@@ -13,7 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_cookie,vary_on_headers
 from rest_framework.permissions import IsAuthenticated,IsAdminUser,AllowAny
-from .tasks import schedule_order,send_order_confirmation_email
+from .tasks import send_order_confirmation_email
 from uuid import UUID 
 from .paginations import CustomPagination
 from rest_framework.decorators import action
@@ -94,7 +94,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         order = serializer.save(user=self.request.user) # Saves
         send_order_confirmation_email(order.order_id,self.request.user.email)
-
+ 
         # task = process_order_task.delay({
         # "order_id": order.id,
         # "user_id": order.user.id,
@@ -156,6 +156,20 @@ class OrderViewSet(viewsets.ModelViewSet):
 #             schedule_order.delay(str(order.order_id))
 #             return Response({"message": "Order received for Updation, processing in the background.", "order_id": order.order_id},serializer.data)
 #         return Response(serializer.errors,status=status.HTTP_404_NOT_FOUND)
+
+# class TriggerFileCreationView(APIView):
+#     def get(self, request):
+#         data = {
+#             "products": [
+#                 {"name": "Phone", "price": 599},
+#                 {"name": "Laptop", "price": 999}
+#             ]
+#         }
+
+#         # Send to Celery for async processing
+#         generate_file_from_data.delay(data)
+
+#         return Response({"message": "File generation task triggered."})
     
 class Prod_Info_List(APIView):
     def get(self,request):
