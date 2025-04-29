@@ -162,7 +162,18 @@ class TriggerFileCreationView(APIView):
         data = {
             "products": [
                 {"name": "Phone", "price": 499, "quantity":2},
-                {"name": "Laptop", "price": 1999, "quantity":5}
+                {"name": "Laptop", "price": 1999, "quantity":5},
+                {"name": "Pen", "price": 2, "quantity": 100},
+                {"name": "Pencil", "price": 1, "quantity": 100},
+                {"name": "Eraser", "price": 0.5, "quantity": 100},
+                {"name": "Sharpener", "price": 1.5, "quantity": 100},
+            ],
+            "orders": [
+                {"id": 1, "product": "Phone Model A", "quantity": 2},
+                {"id": 2, "product": "Pen", "quantity": 5},
+                {"id": 3, "product": "Pencil", "quantity": 3},
+                {"id": 4, "product": "Eraser", "quantity": 4},
+                {"id": 5, "product": "Sharpener", "quantity": 2},
             ]
         }
 
