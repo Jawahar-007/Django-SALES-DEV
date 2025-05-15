@@ -1,69 +1,99 @@
-from celery import shared_task
+from celery import shared_task , group
 import time,os,json
 from .models import Order
 from datetime import datetime
 from django.conf import settings
 from django.core.mail import send_mail
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from reportlab.platypus import Table,TableStyle
+# from reportlab.lib import colors
+# from reportlab.lib.pagesizes import A4
+# from reportlab.pdfgen import canvas
+# from reportlab.platypus import Table,TableStyle
 from pathlib import Path
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
 @shared_task
-def generate_file_from_data(data,file_format = 'pdf'):
+def generate_file_from_data(data,file_format = 'pdf' ):
     try:
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        output_dir = Path("generated_files")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        file_path = output_dir / f"data_output_{timestamp}.pdf"
+            
+        # print("data['orders'] ", data.values())
+        # print("data['orders'][0]", data["orders"][0])
+        # print("data['orders'][0]['quantity']", data["orders"][0]["quantity"])
+        # print("data['products'][0]['name']", data["products"][0]["name"])
+        # print("data['products'][0]['price']", data["products"][0]["price"])
 
-        print('ss')
-        folder = 'generated_files'
-        print("Folder : ",folder)
-        os.makedirs(folder,exist_ok=True)
-
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"{folder}/output_{timestamp}.{file_format}"
-
-        c = canvas.Canvas(str(filename), pagesize=A4)
-        width, height = A4
-        print("Data: ",data)
-        # print("Data111: ",data['products'])
-        #return
-        if not data:
-            print("Invalid or empty data, using fallback.")
-            table_data = [["Message"], ["No Data Available"]]
-     
-        else:
+        with PdfPages(file_path) as pdf:
             for section_name,records in data.items():
-                #Section Titile
-                c.setFont("Helvetica-Bold", 16)
-                c.drawString(40, height - 40, section_name)
-            print("Data received :",data)   
-            headers = list(data["products"][0].keys()) # if isinstance(data["products"][0],dict) else list(data["products"][0].__dict__.keys())
-            print("Headers: ",headers)
-            table_data = [headers] + [[str(row.get(col, "")) if isinstance(row,dict) else str(row) for col in headers] for row in data]
-            print("Result Table Data: ",table_data)
+                if not isinstance(records, list) or not records:
+                    df = pd.DataFrame([{"Message":"No Data Available"}])
+                else:
+                    df = pd.DataFrame(records)
+                
+                print(records, "record data")
+                # # Convert to DataFrame
+                # df = pd.DataFrame(data.values())
 
-        table = Table(table_data, colWidths=[80] * len(table_data[0]))
+                # print("Data Frame Values: ",df)
 
-        style =  TableStyle([
-            ('BACKGROUND',(0,0),(-1,0),colors.lightgrey),
-            ('TEXTCOLOR',(0,0),(-1,0),colors.black),
-            ('ALIGN',(0,0),(-1,-1),'LEFT'),
-            ('FONTNAME',(0,0),(-1,0),'Helvetica-Bold'),
-            ('BOTTOMPADDING',(0,0),(-1,0),10),
-            ('GRID',(0,0),(-1,-1),0.5,colors.grey),
-        ])
-        table.setStyle(style)
+                # plot the table using matplotlib
 
-        #Draw Table
-        table.wrapOn(c, width,height)
-        table.drawOn(c,40,height - 40 - 20 * len(table_data))
+                fig ,ax = plt.subplots(figsize = (len(df.columns) * 2.5, len(df) * 0.6 + 1)) #Adjust size to fit content
+                ax.axis('off') # hide axes
+                table = ax.table(cellText=df.values, colLabels=df.columns, cellLoc='center' , loc = 'center')
 
-        c.save()
+                # Add Section Title 
+                title = f"{section_name.title()} Table" 
+                ax.set_title(title,fontsize = 14,fontweight = 'bold')
 
-        # if file_format == 'json':
-        #     with open(filename,'w') as f:
-        #         json.dump(data,f,indent=4)
+                # Create Table in the Plot
+                table = ax.table(cellText=df.values,colLabels=df.columns,cellLoc='center',loc = 'center')
+
+                table.auto_set_font_size(False)
+                table.set_fontsize(10)
+                table.scale(1, 1.5)
+
+                print("Table cells data : ",table.get_celld().items())
+                # Highlighting the Summary Row
+                for (row,col), cell in table.get_celld().items():
+                    if row == 0:     #For Highlighting last row , if row == len(df)
+                        cell.set_fontsize(10)
+                        cell.set_text_props(weight='bold')
+                        cell.set_facecolor('#d3d3d3')
+                        cell.set_edgecolor('grey')
+                        # linewidth , lineHeight need to be set
+                    else:
+                        cell.set_fontsize(10)
+                        cell.set_facecolor('white')
+                        cell.set_edgecolor('grey')
+                        cell.set_text_props(ha='left')
+
+                #   SAVE TO PDF
+                pdf.savefig(fig, bbox_inches='tight')
+                plt.close(fig)
 
     except Exception as e:
-        print('error',e)
-    return f"PDF file created at: {filename}"
+        print('Error Generating PDF : ',e)
+        print( f" Error :{str(e)}") 
+    print(f"PDF File created at : {file_path} ")
+
+@shared_task
+def subtask(name,delay):
+    time.sleep(delay)
+    return f"{name} completed in {delay}s "
+
+@shared_task
+def parent_task():
+    tasks = group(
+        subtask.s("task1",5),
+        subtask.s("task2",3),
+        subtask.s("task3",4),
+        subtask.s("task4",2),
+        subtask.s("task5",1)
+    )
+    result = tasks.apply_async()
+    return result.join()

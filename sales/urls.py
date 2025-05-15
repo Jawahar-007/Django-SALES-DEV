@@ -32,7 +32,7 @@ urlpatterns = [
     path('products/info/',Prod_Info_List.as_view(),name='product-info-list'),
     # path('user-orders/',views.UserOrderListAPIView.as_view(),name='user-orders-list'),
     path('trigger-file/', views.TriggerFileCreationView.as_view(), name='trigger-file'),
-
+    path('trigger-view/', views.TriggerView.as_view(),name='trigger_view'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 

@@ -13,7 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_cookie,vary_on_headers
 from rest_framework.permissions import IsAuthenticated,IsAdminUser,AllowAny
-from .tasks import generate_file_from_data
+from .tasks import generate_file_from_data,parent_task
 from uuid import UUID 
 from .paginations import CustomPagination
 from rest_framework.decorators import action
@@ -182,6 +182,11 @@ class TriggerFileCreationView(APIView):
         print("Task : (Generate file from data)",generate_file_from_data.delay(data))
 
         return Response({"message": "File generation task triggered."})
+    
+class TriggerView(APIView):
+    def get(self,request):
+        result = parent_task.delay()
+        return Response({"task_id": result.id},status = 202)
     
 class Prod_Info_List(APIView):
     def get(self,request):
