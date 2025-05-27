@@ -11,4 +11,4 @@ def invalidate_product_cache(sender,instance, **kwargs):
     print("Clearing Product Cache")
 
     #Clear Product List caches
-    cache.delete_pattern('*product_list*')
+    cache.delete_pattern('*order_list*')

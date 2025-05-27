@@ -33,6 +33,7 @@ urlpatterns = [
     # path('user-orders/',views.UserOrderListAPIView.as_view(),name='user-orders-list'),
     path('trigger-file/', views.TriggerFileCreationView.as_view(), name='trigger-file'),
     path('trigger-view/', views.TriggerView.as_view(),name='trigger_view'),
+    path('trigger-parallel/', views.TriggerParallelApiCallView.as_view(), name='trigger-parallel-apicall'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 

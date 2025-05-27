@@ -1,5 +1,5 @@
-from celery import shared_task , group
-import time,os,json
+from celery import shared_task , group , chord
+import time,os,json,requests
 from .models import Order
 from datetime import datetime
 from django.conf import settings
@@ -87,13 +87,65 @@ def subtask(name,delay):
     return f"{name} completed in {delay}s "
 
 @shared_task
+def process_results(results):
+    return {
+        "message": "All tasks completed",
+        "results": results
+    }
+
+@shared_task
+def orchestrate_tasks():
+    subtasks =  [subtask.s(f"task-{i+1}",i + 1) for i in range(5) ]
+    return chord(subtasks)(process_results.s())
+
+@shared_task
 def parent_task():
-    tasks = group(
+    tasks = [
         subtask.s("task1",5),
-        subtask.s("task2",3),
-        subtask.s("task3",4),
+        subtask.s("task2",21),
+        subtask.s("task3",17),
         subtask.s("task4",2),
-        subtask.s("task5",1)
-    )
-    result = tasks.apply_async()
-    return result.join()
+        subtask.s("task5",10)
+    ]
+    return chord(tasks)(process_results.s())
+
+BASE_URL = "http://localhost:8000"  # Or use django reverse() if calling internal views
+AUTH_HEADER = {
+    "Authorization": "Bearer <your-token-here>",  # Will be passed dynamically below
+    "Content-Type": "application/json"
+}
+
+@shared_task
+def get_all_orders(auth_token):
+    headers = {
+        "Authorization": f"Bearer {auth_token}"
+    }
+    response = requests.get(f"{BASE_URL}/orders/", headers=headers)
+    return response.json()
+
+@shared_task
+def get_order_by_id(order_id, auth_token):
+    headers = {
+        "Authorization": f"Bearer {auth_token}"
+    }
+    response = requests.get(f"{BASE_URL}/orders/{order_id}/", headers=headers)
+    return response.json()
+
+@shared_task
+def create_order(data, auth_token):
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "Content-Type": "application/json"
+    }
+    response = requests.post(f"{BASE_URL}/orders/", headers=headers, json=data)
+    return response.json()
+
+@shared_task
+def parent_apicall_task(order_id, create_data_payload, auth_token):
+    task_group = group([
+        get_all_orders.s(auth_token),
+        get_order_by_id.s(order_id, auth_token),
+        create_order.s(create_data_payload, auth_token),
+    ])
+    result = task_group.apply_async()
+    return result.id

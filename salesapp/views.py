@@ -13,7 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_cookie,vary_on_headers
 from rest_framework.permissions import IsAuthenticated,IsAdminUser,AllowAny
-from .tasks import generate_file_from_data,parent_task
+from .tasks import generate_file_from_data,parent_task,orchestrate_tasks,parent_apicall_task
 from uuid import UUID 
 from .paginations import CustomPagination
 from rest_framework.decorators import action
@@ -52,8 +52,6 @@ class Product_list(generics.ListCreateAPIView):
         return super().list(request,*args,**kwargs)
     
     def get_queryset(self):  # get db objects for list view from db
-        import time
-        time.sleep(2)
         qs = Product.objects.all().order_by('created_at')
         return qs
     
@@ -78,7 +76,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     throttle_scope = 'orders'
     queryset = Order.objects.prefetch_related('items__product')
     serializer_class = OrderSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     pagination_class = None
     filterset_class = OrderFilter
     filter_backends = [
@@ -87,21 +85,20 @@ class OrderViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter]
     
     @method_decorator(cache_page(60 * 15,key_prefix='order_list'))
-    @method_decorator(vary_on_headers("Authorisation")) # value changes in header from user req then create a cached response and return response only with matching header 
+    @method_decorator(vary_on_headers("Authorization")) # value changes in header from user req then create a cached response and return response only with matching header 
     def list(self,request,*args,**kwargs):# don't goto db , takes from cache
         return super().list(request,*args,**kwargs)
     
     def perform_create(self, serializer):
         order = serializer.save(user=self.request.user) # Saves
-        # send_order_confirmation_email(order.order_id,self.request.user.email)
- 
-        # task = process_order_task.delay({
+        
+        # task = process_order_task.delay({                                                                                                       
         # "order_id": order.id,
         # "user_id": order.user.id,
         # "timestamp": str(order.created_at),
         #  })
         # return Response({
-        # "order_id": order.id,
+        # "order_id": order.id,          
         # "task_id": task.id
         # })
     
@@ -175,13 +172,34 @@ class TriggerFileCreationView(APIView):
                 {"id": 4, "product": "Eraser", "quantity": 4},
                 {"id": 5, "product": "Sharpener", "quantity": 2},
             ]
-        }
+        }   
+        order = Order.objects.prefetch_related('items__product')
+        serializer = OrderSerializer(order,many=True)
+        data = serializer.data
+        print("Order data : ",serializer.data)  
 
-        print("DATA: ",data)
         # Send to Celery for async processing
         print("Task : (Generate file from data)",generate_file_from_data.delay(data))
 
-        return Response({"message": "File generation task triggered."})
+        return Response({"message": "File generation task triggered. Data sent to Celery :", "data": data}, status=status.HTTP_202_ACCEPTED)
+    
+class TriggerParallelApiCallView(APIView):
+    def post(self, request):
+        auth_token = request.headers.get("Authorization","").replace("Bearer ", "")
+        order_id = request.data.get("order_id", "")
+        create_data_payload = request.data.get("create_payload", {
+            "status": "Pending",
+            "items": [
+                {"product": 5, "quantity": 3},
+                {"product": 3, "quantity": 2}
+            ]
+        })
+
+        if not auth_token or not order_id:
+            return Response({"error": "Missing token or order_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        task_id = parent_apicall_task.delay(order_id, create_data_payload, auth_token)
+        return Response({"message": "Parallel tasks started", "group_task_id": task_id.id}, status=status.HTTP_202_ACCEPTED)
     
 class TriggerView(APIView):
     def get(self,request):
