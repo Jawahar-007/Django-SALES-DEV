@@ -6,6 +6,7 @@ from rest_framework import filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status,generics,viewsets
+from datetime import datetime
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from django.db.models import Max
@@ -15,6 +16,7 @@ from django.views.decorators.vary import vary_on_cookie,vary_on_headers
 from rest_framework.permissions import IsAuthenticated,IsAdminUser,AllowAny
 from .tasks import generate_file_from_data,parent_task,orchestrate_tasks,parent_apicall_task
 from uuid import UUID 
+from .producer import publish_order
 from .paginations import CustomPagination
 from rest_framework.decorators import action
 
@@ -91,7 +93,16 @@ class OrderViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         order = serializer.save(user=self.request.user) # Saves
-        
+        message = {
+        "order_id": str(order.order_id),
+        "user_id": order.user.id,
+        "timestamp": str(datetime.now()),
+        "items": [
+            {"product_id": item.product.id, "quantity": item.quantity}
+            for item in order.items.all()
+        ]
+        }
+        publish_order(message)  # Publish the message to RabbitMQ
         # task = process_order_task.delay({                                                                                                       
         # "order_id": order.id,
         # "user_id": order.user.id,
